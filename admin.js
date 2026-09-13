@@ -1,14 +1,4 @@
-"use strict";
 
-/* =========================================================
-   AsianProducts — Admin Dashboard Logic (admin.js)
-   Vanilla JS. Reads/writes the same localStorage key used by
-   script.js, so anything saved here appears live on index.html
-   the next time that page loads (or immediately in another
-   open tab, via the "storage" event).
-   ========================================================= */
-
-/* ---------- CONFIG (keep in sync with script.js) ---------- */
 const STORAGE_KEY_PRODUCTS = "asianproducts_products";
 
 const CATEGORY_LABELS = {
