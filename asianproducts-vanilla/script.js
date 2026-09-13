@@ -1,16 +1,9 @@
 "use strict";
 
-/* =========================================================
-   AsianProducts — Storefront Logic (script.js)
-   Vanilla JS. No backend. No local order persistence.
-   Products are read from localStorage (shared with admin.js
-   via the same STORAGE_KEY_PRODUCTS key on the same origin).
-   ========================================================= */
-
 /* ---------- CONFIG (edit these) ---------- */
 const STORAGE_KEY_PRODUCTS = "asianproducts_products";
 const STORAGE_KEY_CART = "asianproducts_cart";
-const DELIVERY_FEE = 500; // د.ج — عدّل هذا الرقم فقط لتغيير رسوم التوصيل في كل الموقع
+const DELIVERY_FEE = 600; // د.ج — عدّل هذا الرقم فقط لتغيير رسوم التوصيل في كل الموقع
 
 // TODO: ضع أرقام واتساب الحقيقية بصيغة دولية بدون "+" وبدون أصفار زائدة.
 // مثال جزائري: رقم 0555 12 34 56 يصبح "213555123456"
