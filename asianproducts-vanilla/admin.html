@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>لوحة تحكم AsianProducts | إدارة المنتجات</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;500;600;700&family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="admin-style.css" />
+</head>
+<body class="admin">
+
+  <div class="admin-layout">
+
+    <!-- ============ SIDEBAR ============ -->
+    <aside class="admin-sidebar">
+      <div class="admin-sidebar__brand">
+        <img src="assets/products/logo.png" alt="شعار AsianProducts" />
+        <div>
+          <strong>AsianProducts</strong>
+          <span>إدارة المنتجات</span>
+        </div>
+      </div>
+
+      <nav class="admin-sidebar__nav" aria-label="التنقل في لوحة التحكم">
+        <button type="button" class="admin-sidebar__link is-active" data-view="products">
+          <span class="admin-sidebar__icon">🗂️</span> المنتجات
+        </button>
+        <button type="button" class="admin-sidebar__link" data-view="settings">
+          <span class="admin-sidebar__icon">⚙️</span> الإعدادات
+        </button>
+      </nav>
+
+      <a href="index.html" class="admin-sidebar__logout">
+        <span>↩</span> العودة إلى المتجر
+      </a>
+    </aside>
+
+    <!-- ============ MAIN ============ -->
+    <div class="admin-main">
+
+      <header class="admin-topbar">
+        <div class="admin-topbar__status">
+          <span class="admin-status-dot"></span>
+          المتجر متصل
+        </div>
+        <div class="admin-topbar__search">
+          <input type="search" id="search-input" placeholder="ابحث عن منتج بالاسم أو الباركود..." />
+        </div>
+      </header>
+
+      <!-- ============ PRODUCTS VIEW ============ -->
+      <section class="admin-view" id="view-products">
+        <div class="admin-view__header">
+          <div class="admin-view__title">
+            <h1>المنتجات</h1>
+            <span class="admin-pill" id="products-count">0 منتجات مسجلة</span>
+          </div>
+          <div class="admin-view__actions">
+            <select id="category-filter-select">
+              <option value="all">جميع الفئات</option>
+              <option value="food">أطعمة ومشروبات</option>
+              <option value="care">عناية وجمال</option>
+              <option value="accessories">إكسسوارات</option>
+            </select>
+            <button type="button" class="btn btn-primary" id="add-product-btn">+ إضافة منتج جديد</button>
+          </div>
+        </div>
+
+        <div class="admin-card">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>صورة</th>
+                <th>اسم المنتج</th>
+                <th>الفئة</th>
+                <th>السعر</th>
+                <th>الحالة</th>
+                <th>الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="products-table-body">
+              <!-- rendered by admin.js -->
+            </tbody>
+          </table>
+
+          <div class="admin-empty" id="products-empty" hidden>
+            <div class="admin-empty__icon">🗒️</div>
+            <p class="admin-empty__title">لا توجد منتجات بعد</p>
+            <p class="admin-empty__text">ابدأ بإضافة أول منتج أصيل ليظهر في كتالوج المتجر للمتسوقين فورًا.</p>
+            <button type="button" class="btn btn-primary" id="add-first-product-btn">+ إضافة المنتج الأول</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SETTINGS VIEW ============ -->
+      <section class="admin-view" id="view-settings" hidden>
+        <div class="admin-view__header">
+          <div class="admin-view__title">
+            <h1>الإعدادات</h1>
+          </div>
+        </div>
+
+        <div class="admin-card admin-card--form">
+          <div class="admin-form__field">
+            <label for="settings-delivery">رسوم التوصيل (د.ج)</label>
+            <input type="number" id="settings-delivery" min="0" step="50" />
+            <p class="admin-form__hint">
+              ملاحظة: هذا الحقل للعرض فقط في هذا الملف التجريبي — لتغيير رسوم التوصيل فعليًا في الموقع، عدّل ثابت
+              <code>DELIVERY_FEE</code> في أعلى ملف <code>script.js</code>.
+            </p>
+          </div>
+          <button type="button" class="btn btn-primary" id="settings-save-btn">حفظ التغييرات</button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- ============ ADD/EDIT PRODUCT DRAWER ============ -->
+  <div class="overlay" id="drawer-overlay"></div>
+  <aside class="admin-drawer" id="product-drawer" role="dialog" aria-modal="true" aria-label="إضافة أو تعديل منتج">
+    <header class="admin-drawer__header">
+      <h2 id="drawer-title">إضافة منتج جديد</h2>
+      <button type="button" class="admin-drawer__close" id="drawer-close" aria-label="إغلاق">×</button>
+    </header>
+
+    <form class="admin-drawer__body" id="product-form">
+      <input type="hidden" id="field-id" />
+
+      <div class="admin-form__field">
+        <label>صور المنتج</label>
+        <div class="admin-upload" id="upload-dropzone">
+          <span class="admin-upload__icon">⬆️</span>
+          <p>اسحب الصور هنا أو اضغط للتصفح</p>
+          <span class="admin-upload__hint">JPG, PNG — بحد أقصى 5 صور</span>
+          <input type="file" id="upload-input" accept="image/*" multiple hidden />
+        </div>
+        <div class="admin-upload__thumbs" id="upload-thumbs"></div>
+      </div>
+
+      <div class="admin-form__field">
+        <label for="field-name">اسم المنتج</label>
+        <input type="text" id="field-name" required />
+      </div>
+
+      <div class="admin-form__row">
+        <div class="admin-form__field">
+          <label for="field-category">الفئة</label>
+          <select id="field-category" required>
+            <option value="food">أطعمة ومشروبات</option>
+            <option value="care">عناية وجمال</option>
+            <option value="accessories">إكسسوارات</option>
+          </select>
+        </div>
+        <div class="admin-form__field">
+          <label for="field-sku">رمز المنتج (SKU)</label>
+          <input type="text" id="field-sku" placeholder="ASN-XX-0000" />
+        </div>
+      </div>
+
+      <div class="admin-form__row">
+        <div class="admin-form__field">
+          <label for="field-price">السعر بالدينار الجزائري</label>
+          <div class="admin-input-suffix">
+            <input type="number" id="field-price" min="0" step="50" required />
+            <span>د.ج</span>
+          </div>
+        </div>
+        <div class="admin-form__field">
+          <label for="field-origin">بلد المنشأ</label>
+          <input type="text" id="field-origin" placeholder="مثال: اليابان" />
+        </div>
+      </div>
+
+      <div class="admin-form__field">
+        <label for="field-description">الوصف</label>
+        <textarea id="field-description" rows="3"></textarea>
+      </div>
+
+      <div class="admin-form__field">
+        <label for="field-ingredients-input">المكونات</label>
+        <div class="admin-tags" id="ingredients-tags"></div>
+        <input type="text" id="field-ingredients-input" placeholder="اكتب مكوّنًا واضغط Enter" />
+      </div>
+
+      <div class="admin-form__field">
+        <label>المواصفات</label>
+        <div id="specs-rows"></div>
+        <button type="button" class="admin-link-btn" id="add-spec-row">+ إضافة مواصفة</button>
+      </div>
+
+      <div class="admin-form__field admin-form__field--toggle">
+        <label for="field-available">متوفر للبيع</label>
+        <label class="admin-toggle">
+          <input type="checkbox" id="field-available" checked />
+          <span class="admin-toggle__track"><span class="admin-toggle__thumb"></span></span>
+        </label>
+      </div>
+    </form>
+
+    <footer class="admin-drawer__footer">
+      <button type="button" class="btn btn-outline" id="drawer-cancel">إلغاء</button>
+      <button type="submit" form="product-form" class="btn btn-primary" id="drawer-save">حفظ المنتج</button>
+    </footer>
+  </aside>
+
+  <!-- ============ DELETE CONFIRMATION ============ -->
+  <div class="overlay" id="delete-overlay"></div>
+  <div class="admin-confirm" id="delete-confirm" role="alertdialog" aria-modal="true">
+    <h3>هل أنت متأكد من حذف هذا المنتج؟</h3>
+    <p id="delete-product-name"></p>
+    <div class="admin-confirm__actions">
+      <button type="button" class="btn btn-outline" id="delete-cancel">إلغاء</button>
+      <button type="button" class="btn btn-danger" id="delete-confirm-btn">حذف</button>
+    </div>
+  </div>
+
+  <!-- ============ TOAST ============ -->
+  <div class="toast" id="admin-toast" role="status" aria-live="polite"></div>
+
+  <script src="admin.js"></script>
+</body>
+</html>

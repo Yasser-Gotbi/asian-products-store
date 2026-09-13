@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AsianProducts | منتجات آسيوية أصيلة</title>
+  <meta name="description" content="AsianProducts — منتجات آسيوية أصيلة مختارة بعناية من كوريا واليابان والصين." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;500;600;700&family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ============ NAVBAR ============ -->
+  <header class="navbar">
+    <div class="container navbar__inner">
+      <a href="#top" class="navbar__brand" id="nav-brand">
+        <img src="assets/products/logo.png" alt="شعار AsianProducts" class="navbar__logo" />
+        <span>AsianProducts</span>
+      </a>
+
+      <nav class="navbar__links navbar__links--desktop" aria-label="التنقل الرئيسي">
+        <button type="button" id="nav-home">الرئيسية</button>
+        <button type="button" id="nav-about">معلومات عنا</button>
+        <button type="button" id="nav-catalog">المنتجات</button>
+        <button type="button" id="nav-contact">تواصل معنا</button>
+        <button type="button" class="navbar__cart-btn" id="nav-cart-btn">
+          السلة
+          <span class="navbar__badge" id="cart-badge">0</span>
+        </button>
+      </nav>
+
+      <div class="navbar__mobile-actions">
+        <button type="button" class="navbar__cart-btn" id="nav-cart-btn-mobile" aria-label="فتح السلة">
+          السلة
+          <span class="navbar__badge" id="cart-badge-mobile">0</span>
+        </button>
+        <button type="button" class="navbar__menu-toggle" id="menu-toggle" aria-label="فتح القائمة" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+
+    <nav class="navbar__mobile-menu" id="mobile-menu" aria-label="التنقل على الجوال">
+      <button type="button" id="nav-home-m">الرئيسية</button>
+      <button type="button" id="nav-about-m">معلومات عنا</button>
+      <button type="button" id="nav-catalog-m">المنتجات</button>
+      <button type="button" id="nav-contact-m">تواصل معنا</button>
+    </nav>
+  </header>
+
+  <!-- ============ HERO ============ -->
+  <section class="hero" id="top">
+    <div class="container hero__inner">
+      <p class="hero__eyebrow">منتجات آسيوية أصيلة</p>
+      <h1 class="hero__brand">AsianProducts</h1>
+      <p class="hero__tagline">مختارة بعناية من كوريا واليابان والصين</p>
+      <div id="about">
+        <div class="about-card">
+          <p>
+            نختار في AsianProducts منتجات آسيوية أصيلة من كوريا واليابان والصين بعناية فائقة، لنقدّم لك
+            تجربة تسوّق موثوقة تجمع بين الجودة والأصالة.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="gold-divider" role="presentation"></div>
+
+  <!-- ============ CATALOG ============ -->
+  <main>
+    <section class="catalog" id="catalog">
+      <div class="container">
+        <h2 class="section-heading">تصفح منتجاتنا</h2>
+        <p class="section-subtext">منتجات أصلية مختارة من كوريا واليابان والصين</p>
+
+        <div class="category-filters" id="category-filters" role="tablist" aria-label="تصفية حسب الفئة">
+          <!-- rendered by script.js -->
+        </div>
+
+        <div class="product-grid" id="product-grid">
+          <!-- rendered by script.js -->
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="footer" id="contact">
+    <div class="container footer__inner">
+      <div class="footer__brand">
+        <h2>AsianProducts</h2>
+        <p>منتجات آسيوية أصيلة من كوريا واليابان والصين.</p>
+      </div>
+
+      <nav class="footer__links" aria-label="روابط سريعة">
+        <h3>روابط سريعة</h3>
+        <button type="button" id="footer-home">الرئيسية</button>
+        <button type="button" id="footer-about">معلومات عنا</button>
+        <button type="button" id="footer-catalog">المنتجات</button>
+      </nav>
+
+      <div class="footer__contact">
+        <h3>تواصل معنا</h3>
+        <p id="footer-phone">0658479739</p>
+        <p id="footer-phone">0561436398</p>
+        <div class="footer__social">
+          <a href="https://www.instagram.com/fares_anes_/" aria-label="انستغرام">انستغرام</a>
+          <a href="#" aria-label="فيسبوك">فيسبوك</a>
+          <a href="#" aria-label="تيك توك">تيك توك</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer__bottom">
+      <p>© <span id="footer-year"></span> AsianProducts — جميع الحقوق محفوظة</p>
+    </div>
+  </footer>
+
+  <!-- ============ PRODUCT DETAIL DRAWER ============ -->
+  <div class="overlay" id="product-overlay"></div>
+  <aside class="drawer product-drawer" id="product-drawer" role="dialog" aria-modal="true" aria-label="تفاصيل المنتج">
+    <button type="button" class="drawer__close" id="product-drawer-close" aria-label="إغلاق">×</button>
+    <div class="product-drawer__content" id="product-drawer-content">
+      <!-- rendered by script.js -->
+    </div>
+  </aside>
+
+  <!-- ============ CART DRAWER ============ -->
+  <div class="overlay" id="cart-overlay"></div>
+  <aside class="drawer cart-drawer" id="cart-drawer" role="dialog" aria-modal="true" aria-label="السلة">
+    <header class="cart-drawer__header">
+      <h2>السلة</h2>
+      <button type="button" class="cart-drawer__close" id="cart-drawer-close" aria-label="إغلاق السلة">×</button>
+    </header>
+    <div class="cart-drawer__body" id="cart-drawer-body">
+      <!-- rendered by script.js -->
+    </div>
+  </aside>
+
+  <!-- ============ WHATSAPP NUMBER PICKER MODAL ============ -->
+  <div class="overlay" id="wa-overlay"></div>
+  <div class="wa-modal" id="wa-modal" role="dialog" aria-modal="true" aria-label="اختر رقم الواتساب">
+    <h3>إرسال الطلب عبر واتساب</h3>
+    <p>اختر الرقم الذي تريد إرسال طلبك إليه، وسيتم فتح واتساب مع تفاصيل طلبك جاهزة للإرسال.</p>
+    <div class="wa-modal__options">
+      <button type="button" class="wa-modal__option" id="wa-option-primary">📱 الرقم الأول</button>
+      <button type="button" class="wa-modal__option" id="wa-option-secondary">📱 الرقم الثاني</button>
+    </div>
+    <button type="button" class="wa-modal__cancel" id="wa-cancel">إلغاء</button>
+  </div>
+
+  <!-- ============ TOAST ============ -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
