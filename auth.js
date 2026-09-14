@@ -23,8 +23,8 @@
 const AUTH_STORAGE_KEY = "asianproducts_admin_auth";
 
 // TODO: غيّر اسم المستخدم وكلمة المرور فورًا قبل أي استخدام حقيقي.
-const ADMIN_USERNAME = "admin";
-const ADMIN_PASSWORD = "admin";
+const ADMIN_USERNAME = "fares2005";
+const ADMIN_PASSWORD = "korchi2005*";
 
 // Returns true if the current tab/session is "logged in".
 // Uses sessionStorage on purpose: the person is signed out again
