@@ -12,7 +12,7 @@
   <script>
     // Already logged in? Skip straight to the dashboard.
     if (isAuthenticated()) {
-      window.location.href = "admin.html";
+      window.location.href = "dashboardfk.html";
     }
   </script>
 </head>
@@ -53,7 +53,7 @@
       const errorEl = document.getElementById("login-error");
 
       if (login(username, password)) {
-        window.location.href = "admin.html";
+        window.location.href = "dashboardfk.html";
       } else {
         errorEl.hidden = false;
       }
