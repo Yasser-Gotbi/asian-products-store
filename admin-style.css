@@ -225,10 +225,24 @@ select:focus-visible {
   font-size: 13px;
   color: rgba(250, 247, 242, 0.65);
   transition: color var(--transition-fast);
+  width: 100%;
+  text-align: right;
 }
 
 .admin-sidebar__logout:hover {
   color: var(--ivory);
+}
+
+.admin-sidebar__footer {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding-top: 8px;
+}
+
+.admin-sidebar__logout--btn:hover {
+  color: #ff8a8a;
 }
 
 .admin-main {
@@ -523,6 +537,11 @@ select:focus-visible {
   margin-bottom: 16px;
 }
 
+.admin-empty__seed-btn {
+  margin-top: 10px;
+  font-size: 13px;
+}
+
 /* ---------- Pagination (kept minimal, one page in this demo) ---------- */
 .admin-pagination {
   display: flex;
@@ -762,6 +781,31 @@ select:focus-visible {
   padding: 1px 0;
 }
 
+/* Shown while a picked image is still uploading to Cloud Storage */
+.admin-upload__thumb--uploading img {
+  opacity: 0.45;
+  filter: grayscale(40%);
+}
+
+.admin-upload__thumb--uploading::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(27, 59, 43, 0.25);
+  border-top-color: var(--forest);
+  animation: admin-spin 0.7s linear infinite;
+}
+
+@keyframes admin-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* ---------- Tags (ingredients) ---------- */
 .admin-tags {
   display: flex;
@@ -905,12 +949,87 @@ select:focus-visible {
 }
 
 /* =========================================================
+   LOGIN PAGE
+   ========================================================= */
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--forest);
+  padding: 24px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 380px;
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: 40px 32px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+}
+
+.login-card__logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 0 auto 16px;
+}
+
+.login-card h1 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--forest);
+  margin-bottom: 6px;
+}
+
+.login-card__subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 28px;
+}
+
+.login-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: right;
+  margin-bottom: 20px;
+}
+
+.login-card__error {
+  font-size: 13px;
+  color: #b23b3b;
+  background: rgba(178, 59, 59, 0.08);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  text-align: center;
+}
+
+.login-card__back {
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* =========================================================
    RESPONSIVE
    ========================================================= */
+
+/* ---------- Tablet: icon-only sidebar rail ---------- */
 @media (max-width: 1024px) {
+  .admin-layout {
+    align-items: stretch;
+  }
   .admin-sidebar {
     width: 76px;
     align-items: center;
+  }
+  .admin-sidebar__brand {
+    justify-content: center;
   }
   .admin-sidebar__brand div,
   .admin-sidebar__link span:last-child,
@@ -920,37 +1039,245 @@ select:focus-visible {
   .admin-sidebar__link {
     justify-content: center;
   }
+  .admin-sidebar__logout {
+    justify-content: center;
+  }
   .admin-form__row {
     grid-template-columns: 1fr;
   }
 }
 
+/* ---------- Phone: sidebar becomes a compact top bar ---------- */
+@media (max-width: 640px) {
+  .admin-layout {
+    flex-direction: column;
+  }
+  .admin-sidebar {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    gap: 8px;
+  }
+  .admin-sidebar__brand {
+    padding: 0;
+    margin: 0;
+    border: none;
+  }
+  .admin-sidebar__brand div {
+    display: block;
+  }
+  .admin-sidebar__brand strong {
+    font-size: 13px;
+  }
+  .admin-sidebar__brand span {
+    font-size: 10px;
+  }
+  .admin-sidebar__nav {
+    flex-direction: row;
+    flex: none;
+    gap: 4px;
+  }
+  .admin-sidebar__link {
+    padding: 10px 12px;
+  }
+  .admin-sidebar__link span:last-child {
+    display: none;
+  }
+  .admin-sidebar__footer {
+    flex-direction: row;
+    border-top: none;
+    padding-top: 0;
+  }
+  .admin-sidebar__logout {
+    width: auto;
+    padding: 8px;
+  }
+  .admin-sidebar__logout span:last-child {
+    display: none;
+  }
+}
+
+/* ---------- General mobile layout tightening ---------- */
 @media (max-width: 768px) {
   .admin-view {
-    padding: 20px 16px 48px;
+    padding: 16px 14px 48px;
   }
+
   .admin-topbar {
-    padding: 14px 16px;
+    flex-wrap: wrap;
+    padding: 12px 14px;
+    gap: 10px;
+  }
+  .admin-topbar__status {
+    order: 2;
+  }
+  .admin-topbar__search {
+    order: 1;
+    max-width: none;
+    flex-basis: 100%;
+  }
+  .admin-topbar__search input {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+
+  .admin-view__header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .admin-view__title {
+    justify-content: space-between;
+  }
+  .admin-view__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .admin-view__actions select,
+  .admin-view__actions .btn {
+    width: 100%;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+
+  /* ---- Products table becomes a stacked card list ---- */
+  .admin-table {
+    border-collapse: separate;
+    border-spacing: 0;
   }
   .admin-table thead {
     display: none;
   }
   .admin-table,
-  .admin-table tbody,
-  .admin-table tr,
-  .admin-table td {
+  .admin-table tbody {
     display: block;
     width: 100%;
   }
+  .admin-card {
+    border: none;
+    background: transparent;
+  }
+  .admin-table tbody {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
   .admin-table tr {
-    padding: 14px 16px;
-    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 12px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 14px;
   }
   .admin-table td {
+    display: block;
+    width: auto;
+    padding: 0;
     border: none;
-    padding: 4px 0;
+    font-size: 14px;
+  }
+  /* image: first visually (right side in RTL) */
+  .admin-table td:nth-child(1) {
+    order: 1;
+    flex: 0 0 auto;
+  }
+  .admin-table__thumb {
+    width: 52px;
+    height: 52px;
+  }
+  /* name + sku: fills remaining space next to the image */
+  .admin-table td:nth-child(2) {
+    order: 2;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  /* price: pinned to the far side of the first row */
+  .admin-table td:nth-child(4) {
+    order: 3;
+    flex: 0 0 auto;
+    margin-inline-start: auto;
+    font-size: 15px;
+  }
+  /* category pill: starts a new line */
+  .admin-table td:nth-child(3) {
+    order: 4;
+    flex: 0 0 auto;
+  }
+  /* availability toggle */
+  .admin-table td:nth-child(5) {
+    order: 5;
+    flex: 0 0 auto;
+    margin-inline-start: auto;
+  }
+  /* actions: full-width row, separated with a divider */
+  .admin-table td:nth-child(6) {
+    order: 6;
+    flex: 1 1 100%;
+    padding-top: 10px;
+    margin-top: 2px;
+    border-top: 1px dashed var(--border);
+    display: flex;
+    justify-content: flex-end;
   }
   .admin-table__actions {
-    margin-top: 8px;
+    gap: 10px;
+  }
+
+  .admin-empty {
+    padding: 56px 16px;
+  }
+}
+
+/* ---------- Bigger tap targets everywhere on touch-sized screens ---------- */
+@media (max-width: 640px) {
+  .admin-icon-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+  .admin-toggle__track {
+    width: 44px;
+    height: 26px;
+  }
+  .admin-toggle__thumb {
+    width: 22px;
+    height: 22px;
+  }
+  .admin-toggle input:checked + .admin-toggle__track .admin-toggle__thumb {
+    transform: translateX(-18px);
+  }
+
+  /* Drawer fields get a little more breathing room for touch */
+  .admin-form__field input[type="text"],
+  .admin-form__field input[type="number"],
+  .admin-form__field textarea,
+  .admin-form__field select,
+  .admin-input-suffix input {
+    padding: 12px 14px;
+    font-size: 15px;
+  }
+  .admin-upload {
+    padding: 20px 14px;
+  }
+  .admin-drawer__footer {
+    padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
+  }
+  .admin-drawer__body {
+    padding: 16px;
+  }
+}
+
+/* ---------- Small phones ---------- */
+@media (max-width: 400px) {
+  .admin-sidebar__brand strong {
+    font-size: 12px;
+  }
+  .admin-view__title h1 {
+    font-size: 19px;
   }
 }

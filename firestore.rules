@@ -1,0 +1,45 @@
+rules_version = '2';
+
+// ============================================================
+// AsianProducts — Firestore Security Rules
+// ============================================================
+// Deploy with the Firebase CLI:
+//   firebase deploy --only firestore:rules
+// or paste this into: Firebase Console → Firestore Database → Rules
+//
+// ⚠️ IMPORTANT CONTEXT
+// admin.html is protected only by the simple client-side password
+// gate in auth.js — NOT by real Firebase Authentication. That means
+// Firestore itself has no way to know "this write came from a
+// logged-in admin" the way it could with Firebase Auth.
+//
+// The rules below give you two honest options. Pick ONE for now:
+// ============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /products/{productId} {
+
+      // Anyone can READ products — required for the public storefront.
+      allow read: if true;
+
+      // ---------------------------------------------------------
+      // OPTION A — Temporarily open (default below, active).
+      // Anyone who has your firebaseConfig (which is always visible
+      // in your site's JS — this is normal for web apps) can write.
+      // Fine to ship with while it's just you managing products, but
+      // know that it is NOT real protection against a determined
+      // visitor who finds your config and calls Firestore directly.
+      allow write: if true;
+
+      // ---------------------------------------------------------
+      // OPTION B — Require Firebase Authentication (recommended
+      // upgrade). Delete "allow write: if true;" above, uncomment
+      // the line below, then wire up Firebase Auth (e.g. Email/
+      // Password) in login.html/admin.html instead of the current
+      // sessionStorage gate. This is real, server-verified security.
+      // allow write: if request.auth != null;
+    }
+  }
+}
