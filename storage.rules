@@ -1,0 +1,28 @@
+rules_version = '2';
+
+// ============================================================
+// AsianProducts — Cloud Storage Security Rules
+// ============================================================
+// Deploy with the Firebase CLI:
+//   firebase deploy --only storage
+// or paste this into: Firebase Console → Storage → Rules
+//
+// Same honest note as firestore.rules: without real Firebase Auth,
+// "allow write: if true" is the only way uploads work from the admin
+// panel right now. See firestore.rules for the Option B upgrade path.
+// ============================================================
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    match /products/{allPaths=**} {
+      // Anyone can view product images — required for the storefront.
+      allow read: if true;
+
+      // Restrict uploads to images only, 10MB max per file, as a
+      // basic sanity check even while write access itself is open.
+      allow write: if request.resource.size < 10 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+  }
+}

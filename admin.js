@@ -1,79 +1,52 @@
 
-const STORAGE_KEY_PRODUCTS = "asianproducts_products";
 
+"use strict";
+
+import { db, PRODUCTS_COLLECTION } from "./firebase.js";
+import {
+  collection,
+  doc,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  onSnapshot,
+  query,
+  orderBy,
+  serverTimestamp,
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* ---------- إعدادات Cloudinary ---------- */
+const CLOUDINARY_CLOUD_NAME = "q62bvers";
+const CLOUDINARY_UPLOAD_PRESET = "qwenmyy0";
 const CATEGORY_LABELS = {
   food: "أطعمة ومشروبات",
   care: "عناية وجمال",
   accessories: "إكسسوارات",
 };
 
-const MAX_IMAGES = 5;
+/* ---------- دالة رفع الصورة إلى Cloudinary ---------- */
+async function uploadImageToCloudinary(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
 
-/* ---------- Same seed used by script.js, so the table isn't
-   empty the very first time the admin panel is opened. ---------- */
-const SEED_PRODUCTS = [
-  {
-    id: "p1", sku: "ASN-CN-9018", name: "صابون شامبو صلب بخلاصة أوراق السرو — Suzuki Sasaki",
-    category: "care", categoryLabel: "عناية وجمال", price: 1800, originCountry: "غير محدد",
-    images: ["assets/products/product-01-suzuki-shampoo-a.jpg", "assets/products/product-01-suzuki-shampoo-b.jpg"],
-    description: "شامبو صلب بتصميم مثلث مميز، مصنوع بخلاصة أوراق السرو الشرقي (Cacumen Biotae).",
-    ingredients: ["خلاصة أوراق السرو الشرقي (Cacumen Biotae)"],
-    specifications: [{ label: "الشكل", value: "صابون شامبو صلب (بار)" }], available: true,
-  },
-  {
-    id: "p2", sku: "ASN-JP-8966", name: "فيتغم كولاجين 20X — قهوة الشيا",
-    category: "food", categoryLabel: "أطعمة ومشروبات", price: 3200, originCountry: "اليابان",
-    images: ["assets/products/product-02-fitgum-coffee-pouch.jpg", "assets/products/product-02-fitgum-coffee-sachet.jpg"],
-    description: "خليط قهوة 11 في 1 يجمع بين الكولاجين والجلوتاثيون وبذور الشيا.",
-    ingredients: ["كولاجين", "جلوتاثيون", "بذور الشيا", "قهوة"],
-    specifications: [{ label: "الوزن الصافي", value: "120 غرام (10 أكياس × 12 غرام)" }], available: true,
-  },
-  {
-    id: "p3", sku: "ASN-XX-9015", name: "ADEX VEDA كريم مرطب بالكافيين والريتينول",
-    category: "care", categoryLabel: "عناية وجمال", price: 2400, originCountry: "غير محدد",
-    images: ["assets/products/product-03-adexveda-cream.jpg"],
-    description: "كريم مرطب طبيعي يجمع بين الريتينول والكافيين بتركيبة Osmotic Force Max.",
-    ingredients: ["ريتينول", "كافيين"], specifications: [{ label: "النوع", value: "كريم مرطب طبيعي" }], available: true,
-  },
-  {
-    id: "p4", sku: "ASN-JP-9012", name: "Pure Beauty Collagen — مسحوق كولاجين بحري ياباني",
-    category: "food", categoryLabel: "أطعمة ومشروبات", price: 3500, originCountry: "اليابان",
-    images: ["assets/products/product-04-pure-beauty-collagen.jpg"],
-    description: "مسحوق كولاجين بحري بجودة يابانية، يحتوي على خلاصة حبوب الكوإكس وحمض الهيالورونيك و CoQ10.",
-    ingredients: ["كولاجين بحري (100,000 ملغ)", "خلاصة حبوب الكوإكس", "حمض الهيالورونيك", "CoQ10"],
-    specifications: [{ label: "الوزن الصافي", value: "100 غرام" }], available: true,
-  },
-  {
-    id: "p5", sku: "ASN-CN-8971", name: "Sumifun لاصقة تخفيف آلام الركبة",
-    category: "care", categoryLabel: "عناية وجمال", price: 900, originCountry: "غير محدد",
-    images: ["assets/products/product-05-meniscus-patch.jpg"],
-    description: "لاصقات لتخفيف آلام الركبة والمفاصل.",
-    ingredients: [], specifications: [{ label: "عدد القطع", value: "4 قطع" }], available: true,
-  },
-  {
-    id: "p6", sku: "ASN-CN-8972", name: "Sumifun مرهم تخفيف آلام الركبة",
-    category: "care", categoryLabel: "عناية وجمال", price: 1100, originCountry: "غير محدد",
-    images: ["assets/products/product-06-meniscus-ointment.jpg"],
-    description: "مرهم لتخفيف آلام الركبة والعظام والمفاصل.",
-    ingredients: [], specifications: [{ label: "الوزن", value: "40 غرام" }], available: true,
-  },
-  {
-    id: "p7", sku: "ASN-XX-8967", name: "مسحوق ماتشا عضوي",
-    category: "food", categoryLabel: "أطعمة ومشروبات", price: 2200, originCountry: "غير محدد",
-    images: ["assets/products/product-07-matcha-powder.jpg"],
-    description: "مسحوق شاي أخضر ماتشا عضوي 100%، خالٍ من الغلوتين ومنتجات الألبان.",
-    ingredients: ["مسحوق شاي أخضر (ماتشا) عضوي"], specifications: [{ label: "الوزن الصافي", value: "100 غرام" }], available: true,
-  },
-  {
-    id: "p8", sku: "ASN-XX-8969", name: "Googeer شاي ديتوكس بنكهة الخوخ",
-    category: "food", categoryLabel: "أطعمة ومشروبات", price: 1600, originCountry: "غير محدد",
-    images: ["assets/products/product-08-detox-tea.jpg"],
-    description: "شاي منشط لتنظيف الجسم بنكهة الخوخ الطبيعية، يأتي في عبوة تحتوي على 28 كيس شاي.",
-    ingredients: [], specifications: [{ label: "عدد الأكياس", value: "28 كيس شاي" }], available: true,
-  },
-];
+  const response = await fetch(
+    `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+    {
+      method: "POST",
+      body: formData,
+    }
+  );
 
-/* ---------- Utilities ---------- */
+  if (!response.ok) {
+    throw new Error("فشل رفع الصورة إلى السيرفر");
+  }
+
+  const data = await response.json();
+  return data.secure_url; // يرجع رابط الصورة المباشر
+}
+
+/* ---------- Utilities & Normalization ---------- */
 function escapeHTML(value) {
   const div = document.createElement("div");
   div.textContent = String(value ?? "");
@@ -85,44 +58,71 @@ function formatPrice(value) {
   return `${number.toLocaleString("en-US")} د.ج`;
 }
 
-function generateId() {
-  return "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+function normalizeProduct(id, raw) {
+  const category = ["food", "care", "accessories"].includes(raw?.category) ? raw.category : "food";
+  return {
+    id,
+    sku: typeof raw?.sku === "string" && raw.sku ? raw.sku : "—",
+    name: typeof raw?.name === "string" && raw.name ? raw.name : "منتج بدون اسم",
+    category,
+    categoryLabel: CATEGORY_LABELS[category],
+    price: Number.isFinite(Number(raw?.price)) ? Number(raw.price) : 0,
+    originCountry: typeof raw?.originCountry === "string" && raw.originCountry ? raw.originCountry : "غير محدد",
+    images: Array.isArray(raw?.images) && raw.images.length > 0 ? raw.images : ["https://via.placeholder.com/150"],
+    description: typeof raw?.description === "string" ? raw.description : "",
+    ingredients: Array.isArray(raw?.ingredients) ? raw.ingredients : [],
+    specifications: Array.isArray(raw?.specifications) ? raw.specifications : [],
+    available: raw?.available !== false,
+  };
 }
 
-/* ---------- Storage ---------- */
-function getProducts() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY_PRODUCTS);
-    if (!raw) {
-      localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(SEED_PRODUCTS));
-      return JSON.parse(JSON.stringify(SEED_PRODUCTS));
+/* ---------- Firestore: Subscription ---------- */
+function subscribeToProducts() {
+  const productsQuery = query(collection(db, PRODUCTS_COLLECTION), orderBy("createdAt", "desc"));
+
+  onSnapshot(
+    productsQuery,
+    (snapshot) => {
+      products = snapshot.docs.map((docSnap) => normalizeProduct(docSnap.id, docSnap.data()));
+      renderTable();
+    },
+    (error) => {
+      console.error("Firestore error:", error);
+      showToast("تعذّر الاتصال بقاعدة البيانات.");
     }
-    return JSON.parse(raw);
-  } catch {
-    return JSON.parse(JSON.stringify(SEED_PRODUCTS));
-  }
+  );
 }
 
-function saveProducts(products) {
-  try {
-    localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(products));
-    return true;
-  } catch (err) {
-    console.error("تعذّر حفظ المنتجات — قد تكون مساحة التخزين ممتلئة (الصور الكبيرة تستهلك مساحة).", err);
-    return false;
-  }
+/* ---------- Firestore: CRUD ---------- */
+async function saveProductToFirestore(productData, existingId) {
+  const id = existingId || doc(collection(db, PRODUCTS_COLLECTION)).id;
+  const docRef = doc(db, PRODUCTS_COLLECTION, id);
+  const payload = { ...productData, id };
+  if (!existingId) payload.createdAt = serverTimestamp();
+  await setDoc(docRef, payload, { merge: true });
+  return id;
+}
+
+async function deleteProductFromFirestore(id) {
+  await deleteDoc(doc(db, PRODUCTS_COLLECTION, id));
+}
+
+async function updateProductField(id, fields) {
+  await updateDoc(doc(db, PRODUCTS_COLLECTION, id), fields);
 }
 
 /* ---------- State ---------- */
 let products = [];
 let categoryFilter = "all";
 let searchQuery = "";
-let editingProductId = null; // null => adding a new product
-let draftImages = []; // array of image src strings (existing paths or new base64 data URLs)
+let editingProductId = null;
+
+let draftImages = [];
+let selectedFile = null; // الملف المحدد من الهاتف/الكمبيوتر
 let draftIngredients = [];
 let deleteTargetId = null;
 
-/* ---------- DOM refs ---------- */
+/* ---------- DOM cache ---------- */
 const dom = {};
 
 function cacheDom() {
@@ -139,6 +139,7 @@ function cacheDom() {
   dom.drawerTitle = document.getElementById("drawer-title");
   dom.drawerClose = document.getElementById("drawer-close");
   dom.drawerCancel = document.getElementById("drawer-cancel");
+  dom.drawerSave = document.getElementById("drawer-save");
   dom.form = document.getElementById("product-form");
 
   dom.fieldId = document.getElementById("field-id");
@@ -150,8 +151,7 @@ function cacheDom() {
   dom.fieldDescription = document.getElementById("field-description");
   dom.fieldAvailable = document.getElementById("field-available");
 
-  dom.uploadDropzone = document.getElementById("upload-dropzone");
-  dom.uploadInput = document.getElementById("upload-input");
+  dom.imageFileInput = document.getElementById("field-image-file");
   dom.uploadThumbs = document.getElementById("upload-thumbs");
 
   dom.ingredientsTags = document.getElementById("ingredients-tags");
@@ -167,34 +167,27 @@ function cacheDom() {
   dom.deleteConfirmBtn = document.getElementById("delete-confirm-btn");
 
   dom.toast = document.getElementById("admin-toast");
-
-  dom.sidebarLinks = document.querySelectorAll(".admin-sidebar__link");
-  dom.viewProducts = document.getElementById("view-products");
-  dom.viewSettings = document.getElementById("view-settings");
 }
 
 /* ---------- Toast ---------- */
 let toastTimeout = null;
 function showToast(message) {
+  if (!dom.toast) return;
   dom.toast.textContent = message;
   dom.toast.classList.add("is-visible");
   clearTimeout(toastTimeout);
   toastTimeout = setTimeout(() => dom.toast.classList.remove("is-visible"), 2600);
 }
 
-/* ---------- Table rendering ---------- */
-function getFilteredProducts() {
-  return products.filter((p) => {
+/* ---------- Render Table ---------- */
+function renderTable() {
+  const list = products.filter((p) => {
     const matchesCategory = categoryFilter === "all" || p.category === categoryFilter;
     const q = searchQuery.trim().toLowerCase();
-    const matchesSearch =
-      !q || p.name.toLowerCase().includes(q) || (p.sku || "").toLowerCase().includes(q);
+    const matchesSearch = !q || p.name.toLowerCase().includes(q) || (p.sku || "").toLowerCase().includes(q);
     return matchesCategory && matchesSearch;
   });
-}
 
-function renderTable() {
-  const list = getFilteredProducts();
   dom.productsCount.textContent = `${products.length} منتجات مسجلة`;
 
   if (list.length === 0) {
@@ -207,15 +200,14 @@ function renderTable() {
   dom.tableBody.innerHTML = list
     .map((product) => {
       const image = (product.images && product.images[0]) || "";
-      const categoryClass = `admin-category-pill--${product.category}`;
       return `
       <tr data-row-id="${escapeHTML(product.id)}">
         <td><img src="${escapeHTML(image)}" alt="${escapeHTML(product.name)}" class="admin-table__thumb" /></td>
         <td>
           <span class="admin-table__name">${escapeHTML(product.name)}</span>
-          <span class="admin-table__sku">رمز التخزين: ${escapeHTML(product.sku || "—")}</span>
+          <span class="admin-table__sku">SKU: ${escapeHTML(product.sku || "—")}</span>
         </td>
-        <td><span class="admin-category-pill ${categoryClass}">${escapeHTML(product.categoryLabel || CATEGORY_LABELS[product.category] || "")}</span></td>
+        <td><span class="admin-category-pill admin-category-pill--${product.category}">${escapeHTML(product.categoryLabel)}</span></td>
         <td class="admin-table__price">${formatPrice(product.price)}</td>
         <td>
           <label class="admin-toggle">
@@ -225,8 +217,8 @@ function renderTable() {
         </td>
         <td>
           <div class="admin-table__actions">
-            <button type="button" class="admin-icon-btn" data-edit="${escapeHTML(product.id)}" aria-label="تعديل">✏️</button>
-            <button type="button" class="admin-icon-btn" data-delete="${escapeHTML(product.id)}" aria-label="حذف">🗑️</button>
+            <button type="button" class="admin-icon-btn" data-edit="${escapeHTML(product.id)}">✏️</button>
+            <button type="button" class="admin-icon-btn" data-delete="${escapeHTML(product.id)}">🗑️</button>
           </div>
         </td>
       </tr>`;
@@ -234,7 +226,7 @@ function renderTable() {
     .join("");
 }
 
-/* ---------- Drawer: open / close ---------- */
+/* ---------- Drawer Management ---------- */
 function openDrawer(productId) {
   editingProductId = productId || null;
   const product = productId ? products.find((p) => p.id === productId) : null;
@@ -250,278 +242,118 @@ function openDrawer(productId) {
   dom.fieldAvailable.checked = product ? product.available !== false : true;
 
   draftImages = product ? [...(product.images || [])] : [];
-  draftIngredients = product ? [...(product.ingredients || [])] : [];
-  renderUploadThumbs();
-  renderIngredientTags();
+  selectedFile = null;
+  if (dom.imageFileInput) dom.imageFileInput.value = "";
 
-  dom.specsRows.innerHTML = "";
-  const specs = product && product.specifications && product.specifications.length ? product.specifications : [{ label: "", value: "" }];
-  specs.forEach((spec) => addSpecRow(spec.label, spec.value));
+  renderImagePreview();
 
   dom.drawerOverlay.classList.add("is-visible");
   dom.drawer.classList.add("is-open");
-  document.body.classList.add("no-scroll");
 }
 
 function closeDrawer() {
   dom.drawerOverlay.classList.remove("is-visible");
   dom.drawer.classList.remove("is-open");
-  document.body.classList.remove("no-scroll");
   editingProductId = null;
+  selectedFile = null;
 }
 
-/* ---------- Image upload ---------- */
-function renderUploadThumbs() {
-  dom.uploadThumbs.innerHTML = draftImages
-    .map(
-      (src, index) => `
-    <div class="admin-upload__thumb${index === 0 ? " admin-upload__thumb--main" : ""}">
-      <img src="${escapeHTML(src)}" alt="" />
-      <button type="button" data-remove-image="${index}" aria-label="إزالة الصورة">×</button>
-    </div>`
-    )
-    .join("");
-
-  dom.uploadThumbs.querySelectorAll("[data-remove-image]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const idx = Number(btn.getAttribute("data-remove-image"));
-      draftImages.splice(idx, 1);
-      renderUploadThumbs();
-    });
-  });
+function renderImagePreview() {
+  if (selectedFile) {
+    const objectUrl = URL.createObjectURL(selectedFile);
+    dom.uploadThumbs.innerHTML = `<div class="admin-upload__thumb"><img src="${objectUrl}" /></div>`;
+  } else if (draftImages.length > 0) {
+    dom.uploadThumbs.innerHTML = `<div class="admin-upload__thumb"><img src="${escapeHTML(draftImages[0])}" /></div>`;
+  } else {
+    dom.uploadThumbs.innerHTML = "";
+  }
 }
 
-function handleFiles(fileList) {
-  const files = Array.from(fileList).slice(0, MAX_IMAGES - draftImages.length);
-  files.forEach((file) => {
-    if (!file.type.startsWith("image/")) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      draftImages.push(reader.result); // base64 data URL
-      renderUploadThumbs();
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-/* ---------- Ingredient tags ---------- */
-function renderIngredientTags() {
-  dom.ingredientsTags.innerHTML = draftIngredients
-    .map(
-      (ingredient, index) => `
-    <span class="admin-tag">
-      ${escapeHTML(ingredient)}
-      <button type="button" data-remove-ingredient="${index}" aria-label="إزالة">×</button>
-    </span>`
-    )
-    .join("");
-
-  dom.ingredientsTags.querySelectorAll("[data-remove-ingredient]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      draftIngredients.splice(Number(btn.getAttribute("data-remove-ingredient")), 1);
-      renderIngredientTags();
-    });
-  });
-}
-
-/* ---------- Specification rows ---------- */
-function addSpecRow(label = "", value = "") {
-  const row = document.createElement("div");
-  row.className = "admin-spec-row";
-  row.innerHTML = `
-    <input type="text" placeholder="الخاصية (مثال: الوزن)" class="spec-label" value="${escapeHTML(label)}" />
-    <input type="text" placeholder="القيمة (مثال: 100 غرام)" class="spec-value" value="${escapeHTML(value)}" />
-    <button type="button" class="admin-spec-row__remove" aria-label="إزالة الصف">×</button>
-  `;
-  row.querySelector(".admin-spec-row__remove").addEventListener("click", () => row.remove());
-  dom.specsRows.appendChild(row);
-}
-
-function collectSpecs() {
-  return Array.from(dom.specsRows.querySelectorAll(".admin-spec-row"))
-    .map((row) => ({
-      label: row.querySelector(".spec-label").value.trim(),
-      value: row.querySelector(".spec-value").value.trim(),
-    }))
-    .filter((spec) => spec.label && spec.value);
-}
-
-/* ---------- Save product ---------- */
-function handleFormSubmit(e) {
+/* ---------- Form Submit ---------- */
+async function handleFormSubmit(e) {
   e.preventDefault();
 
   const name = dom.fieldName.value.trim();
-  const category = dom.fieldCategory.value;
   const price = Number(dom.fieldPrice.value);
 
-  if (!name) {
-    showToast("يرجى إدخال اسم المنتج.");
-    dom.fieldName.focus();
-    return;
-  }
-  if (!price || price < 0) {
-    showToast("يرجى إدخال سعر صحيح.");
-    dom.fieldPrice.focus();
+  if (!name || !price) {
+    showToast("يرجى ملء الاسم والسعر بشكل صحيح.");
     return;
   }
 
-  const productData = {
-    id: editingProductId || generateId(),
-    sku: dom.fieldSku.value.trim() || "—",
-    name,
-    category,
-    categoryLabel: CATEGORY_LABELS[category],
-    price,
-    originCountry: dom.fieldOrigin.value.trim() || "غير محدد",
-    images: draftImages.length > 0 ? draftImages : ["assets/products/logo.png"],
-    description: dom.fieldDescription.value.trim(),
-    ingredients: draftIngredients,
-    specifications: collectSpecs(),
-    available: dom.fieldAvailable.checked,
-  };
+  const originalBtnText = dom.drawerSave.textContent;
+  dom.drawerSave.disabled = true;
 
-  if (editingProductId) {
-    products = products.map((p) => (p.id === editingProductId ? productData : p));
-  } else {
-    products.push(productData);
+  try {
+    let finalImages = [...draftImages];
+
+    // إذا قام المستخدم باختيار صورة جديدة من الهاتف/الكمبيوتر
+    if (selectedFile) {
+      dom.drawerSave.textContent = "جارٍ رفع الصورة...";
+      const uploadedUrl = await uploadImageToCloudinary(selectedFile);
+      finalImages = [uploadedUrl];
+    }
+
+    dom.drawerSave.textContent = "جارٍ حفظ المنتج...";
+
+    const productData = {
+      sku: dom.fieldSku.value.trim() || "—",
+      name,
+      category: dom.fieldCategory.value,
+      categoryLabel: CATEGORY_LABELS[dom.fieldCategory.value],
+      price,
+      originCountry: dom.fieldOrigin.value.trim() || "غير محدد",
+      images: finalImages.length > 0 ? finalImages : ["https://via.placeholder.com/150"],
+      description: dom.fieldDescription.value.trim(),
+      available: dom.fieldAvailable.checked,
+    };
+
+    await saveProductToFirestore(productData, editingProductId);
+    closeDrawer();
+    showToast(editingProductId ? "تم التعديل بنجاح" : "تم إضافة المنتج ونشره فوراً!");
+  } catch (err) {
+    console.error(err);
+    showToast("حدث خطأ أثناء الحفظ أو رفع الصورة.");
+  } finally {
+    dom.drawerSave.disabled = false;
+    dom.drawerSave.textContent = originalBtnText;
   }
-
-  const saved = saveProducts(products);
-  if (!saved) {
-    showToast("تعذّر الحفظ — الصور المرفوعة كبيرة جدًا على مساحة التخزين المحلي.");
-    return;
-  }
-
-  renderTable();
-  closeDrawer();
-  showToast(editingProductId ? "تم تحديث المنتج بنجاح" : "تمت إضافة المنتج بنجاح");
 }
 
-/* ---------- Delete flow ---------- */
-function openDeleteConfirm(productId) {
-  const product = products.find((p) => p.id === productId);
-  if (!product) return;
-  deleteTargetId = productId;
-  dom.deleteProductName.textContent = product.name;
-  dom.deleteOverlay.classList.add("is-visible");
-  dom.deleteConfirm.classList.add("is-open");
-}
-
-function closeDeleteConfirm() {
-  dom.deleteOverlay.classList.remove("is-visible");
-  dom.deleteConfirm.classList.remove("is-open");
-  deleteTargetId = null;
-}
-
-function confirmDelete() {
-  if (!deleteTargetId) return;
-  products = products.filter((p) => p.id !== deleteTargetId);
-  saveProducts(products);
-  renderTable();
-  closeDeleteConfirm();
-  showToast("تم حذف المنتج");
-}
-
-/* ---------- View switching (sidebar) ---------- */
-function switchView(view) {
-  dom.sidebarLinks.forEach((link) => link.classList.toggle("is-active", link.getAttribute("data-view") === view));
-  dom.viewProducts.hidden = view !== "products";
-  dom.viewSettings.hidden = view !== "settings";
-}
-
-/* ---------- Event wiring ---------- */
+/* ---------- Events ---------- */
 function wireEvents() {
   dom.addProductBtn.addEventListener("click", () => openDrawer(null));
-  dom.addFirstProductBtn.addEventListener("click", () => openDrawer(null));
+  if (dom.addFirstProductBtn) dom.addFirstProductBtn.addEventListener("click", () => openDrawer(null));
   dom.drawerClose.addEventListener("click", closeDrawer);
   dom.drawerCancel.addEventListener("click", closeDrawer);
   dom.drawerOverlay.addEventListener("click", closeDrawer);
   dom.form.addEventListener("submit", handleFormSubmit);
 
-  dom.categoryFilterSelect.addEventListener("change", (e) => {
-    categoryFilter = e.target.value;
-    renderTable();
-  });
-
-  dom.searchInput.addEventListener("input", (e) => {
-    searchQuery = e.target.value;
-    renderTable();
+  // عند اختيار صورة من الهاتف أو الكمبيوتر
+  dom.imageFileInput.addEventListener("change", (e) => {
+    if (e.target.files && e.target.files[0]) {
+      selectedFile = e.target.files[0];
+      renderImagePreview();
+    }
   });
 
   dom.tableBody.addEventListener("click", (e) => {
     const editBtn = e.target.closest("[data-edit]");
-    if (editBtn) {
-      openDrawer(editBtn.getAttribute("data-edit"));
-      return;
-    }
+    if (editBtn) openDrawer(editBtn.getAttribute("data-edit"));
+
     const deleteBtn = e.target.closest("[data-delete]");
     if (deleteBtn) {
-      openDeleteConfirm(deleteBtn.getAttribute("data-delete"));
+      const id = deleteBtn.getAttribute("data-delete");
+      if (confirm("هل أنت تأكد من حذف هذا المنتج؟")) {
+        deleteProductFromFirestore(id);
+      }
     }
-  });
-
-  dom.tableBody.addEventListener("change", (e) => {
-    const toggle = e.target.closest("[data-toggle-available]");
-    if (!toggle) return;
-    const id = toggle.getAttribute("data-toggle-available");
-    products = products.map((p) => (p.id === id ? { ...p, available: toggle.checked } : p));
-    saveProducts(products);
-    showToast(toggle.checked ? "المنتج متاح الآن في المتجر" : "تم إخفاء المنتج من المتجر");
-  });
-
-  // Image upload: click to browse, or drag & drop
-  dom.uploadDropzone.addEventListener("click", () => dom.uploadInput.click());
-  dom.uploadInput.addEventListener("change", (e) => handleFiles(e.target.files));
-
-  dom.uploadDropzone.addEventListener("dragover", (e) => {
-    e.preventDefault();
-    dom.uploadDropzone.classList.add("is-dragover");
-  });
-  dom.uploadDropzone.addEventListener("dragleave", () => {
-    dom.uploadDropzone.classList.remove("is-dragover");
-  });
-  dom.uploadDropzone.addEventListener("drop", (e) => {
-    e.preventDefault();
-    dom.uploadDropzone.classList.remove("is-dragover");
-    handleFiles(e.dataTransfer.files);
-  });
-
-  // Ingredient tag input
-  dom.ingredientsInput.addEventListener("keydown", (e) => {
-    if (e.key !== "Enter") return;
-    e.preventDefault();
-    const value = dom.ingredientsInput.value.trim();
-    if (value) {
-      draftIngredients.push(value);
-      renderIngredientTags();
-    }
-    dom.ingredientsInput.value = "";
-  });
-
-  dom.addSpecRow.addEventListener("click", () => addSpecRow());
-
-  // Delete confirmation
-  dom.deleteCancel.addEventListener("click", closeDeleteConfirm);
-  dom.deleteOverlay.addEventListener("click", closeDeleteConfirm);
-  dom.deleteConfirmBtn.addEventListener("click", confirmDelete);
-
-  // Sidebar navigation
-  dom.sidebarLinks.forEach((link) => {
-    link.addEventListener("click", () => switchView(link.getAttribute("data-view")));
-  });
-
-  // ESC closes whichever overlay is open
-  document.addEventListener("keydown", (e) => {
-    if (e.key !== "Escape") return;
-    if (dom.deleteConfirm.classList.contains("is-open")) closeDeleteConfirm();
-    else if (dom.drawer.classList.contains("is-open")) closeDrawer();
   });
 }
 
 /* ---------- Init ---------- */
 document.addEventListener("DOMContentLoaded", () => {
   cacheDom();
-  products = getProducts();
-  renderTable();
+  subscribeToProducts();
   wireEvents();
 });

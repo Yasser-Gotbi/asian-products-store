@@ -8,6 +8,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;500;600;700&family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="admin-style.css" />
+  <script src="auth.js"></script>
+  <script>
+    // Redirect logged-out visitors before the dashboard ever renders.
+    requireAuth();
+  </script>
 </head>
 <body class="admin">
 
@@ -27,12 +32,16 @@
         <button type="button" class="admin-sidebar__link is-active" data-view="products">
           <span class="admin-sidebar__icon">🗂️</span> المنتجات
         </button>
-        
       </nav>
 
-      <a href="index.html" class="admin-sidebar__logout">
-        <span>↩</span> العودة إلى المتجر
-      </a>
+      <div class="admin-sidebar__footer">
+        <a href="index.html" class="admin-sidebar__logout">
+          <span>↩</span> العودة إلى المتجر
+        </a>
+        <button type="button" class="admin-sidebar__logout admin-sidebar__logout--btn" id="logout-btn">
+          <span>⏻</span> تسجيل الخروج
+        </button>
+      </div>
     </aside>
 
     <!-- ============ MAIN ============ -->
@@ -92,7 +101,8 @@
         </div>
       </section>
 
-     
+    </div>
+  </div>
 
   <!-- ============ ADD/EDIT PRODUCT DRAWER ============ -->
   <div class="overlay" id="drawer-overlay"></div>
@@ -105,15 +115,14 @@
     <form class="admin-drawer__body" id="product-form">
       <input type="hidden" id="field-id" />
 
+      <!-- حقل صورة المنتج المعدل ليرفع إلى Cloudinary -->
       <div class="admin-form__field">
-        <label>صور المنتج</label>
-        <div class="admin-upload" id="upload-dropzone">
-          <span class="admin-upload__icon">⬆️</span>
-          <p>اسحب الصور هنا أو اضغط للتصفح</p>
-          <span class="admin-upload__hint">JPG, PNG — بحد أقصى 5 صور</span>
-          <input type="file" id="upload-input" accept="image/*" multiple hidden />
-        </div>
-        <div class="admin-upload__thumbs" id="upload-thumbs"></div>
+        <label for="field-image-file">صورة المنتج (من الجهاز/الهاتف)</label>
+        <input type="file" id="field-image-file" accept="image/*" class="admin-input" />
+        <small style="color: #666; font-size: 12px; margin-top: 4px; display: block;">
+          اختر صورة من معرض الصور الخاص بك وترفع مباشرة لتظهر لكل زوار المتجر.
+        </small>
+        <div class="admin-upload__thumbs" id="upload-thumbs" style="margin-top: 10px;"></div>
       </div>
 
       <div class="admin-form__field">
@@ -196,6 +205,6 @@
   <!-- ============ TOAST ============ -->
   <div class="toast" id="admin-toast" role="status" aria-live="polite"></div>
 
-  <script src="admin.js"></script>
+  <script type="module" src="admin.js"></script>
 </body>
 </html>

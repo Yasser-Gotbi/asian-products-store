@@ -1,7 +1,22 @@
 "use strict";
 
+/* =========================================================
+   AsianProducts — Storefront Logic (script.js)
+   Products are read live from Cloud Firestore (see firebase.js).
+   The cart itself stays in localStorage — it's per-device/session
+   data, not something that belongs in the shared product database.
+   No backend order persistence: orders go straight to WhatsApp.
+   ========================================================= */
+
+import { db, PRODUCTS_COLLECTION } from "./firebase.js";
+import {
+  collection,
+  onSnapshot,
+  query,
+  orderBy,
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
 /* ---------- CONFIG (edit these) ---------- */
-const STORAGE_KEY_PRODUCTS = "asianproducts_products";
 const STORAGE_KEY_CART = "asianproducts_cart";
 const DELIVERY_FEE = 600; // د.ج — عدّل هذا الرقم فقط لتغيير رسوم التوصيل في كل الموقع
 
@@ -30,135 +45,10 @@ const ALGERIA_WILAYAS = [
   "عين صالح", "عين قزام", "تقرت", "جانت", "المغير", "المنيعة",
 ];
 
-/* ---------- SEED PRODUCTS (used only the first time, if storage is empty) ---------- */
-const SEED_PRODUCTS = [
-  {
-    id: "p1",
-    sku: "ASN-CN-9018",
-    name: "صابون شامبو صلب بخلاصة أوراق السرو — Suzuki Sasaki",
-    category: "care",
-    categoryLabel: "عناية وجمال",
-    price: 1800,
-    originCountry: "غير محدد",
-    images: ["assets/products/product-01-suzuki-shampoo-a.jpg", "assets/products/product-01-suzuki-shampoo-b.jpg"],
-    description: "شامبو صلب بتصميم مثلث مميز، مصنوع بخلاصة أوراق السرو الشرقي (Cacumen Biotae). يأتي في علبة أنيقة بخط ذهبي على خلفية داكنة.",
-    ingredients: ["خلاصة أوراق السرو الشرقي (Cacumen Biotae)"],
-    specifications: [
-      { label: "الشكل", value: "صابون شامبو صلب (بار)" },
-      { label: "التصميم", value: "علبة مثلثة" },
-    ],
-    available: true,
-  },
-  {
-    id: "p2",
-    sku: "ASN-JP-8966",
-    name: "فيتغم كولاجين 20X — قهوة الشيا",
-    category: "food",
-    categoryLabel: "أطعمة ومشروبات",
-    price: 3200,
-    originCountry: "اليابان",
-    images: ["assets/products/product-02-fitgum-coffee-pouch.jpg", "assets/products/product-02-fitgum-coffee-sachet.jpg"],
-    description: "خليط قهوة 11 في 1 يجمع بين الكولاجين والجلوتاثيون وبذور الشيا. مدعوم بتقنية يابانية، ويأتي على شكل أكياس فردية سهلة التحضير.",
-    ingredients: ["كولاجين", "جلوتاثيون", "بذور الشيا", "قهوة"],
-    specifications: [
-      { label: "الوزن الصافي", value: "120 غرام (10 أكياس × 12 غرام)" },
-      { label: "الاعتماد", value: "معتمد من FDA" },
-    ],
-    available: true,
-  },
-  {
-    id: "p3",
-    sku: "ASN-XX-9015",
-    name: "ADEX VEDA كريم مرطب بالكافيين والريتينول",
-    category: "care",
-    categoryLabel: "عناية وجمال",
-    price: 2400,
-    originCountry: "غير محدد",
-    images: ["assets/products/product-03-adexveda-cream.jpg"],
-    description: "كريم مرطب طبيعي يجمع بين الريتينول والكافيين بتركيبة Osmotic Force Max لترطيب البشرة وتنشيطها.",
-    ingredients: ["ريتينول", "كافيين"],
-    specifications: [{ label: "النوع", value: "كريم مرطب طبيعي" }],
-    available: true,
-  },
-  {
-    id: "p4",
-    sku: "ASN-JP-9012",
-    name: "Pure Beauty Collagen — مسحوق كولاجين بحري ياباني",
-    category: "food",
-    categoryLabel: "أطعمة ومشروبات",
-    price: 3500,
-    originCountry: "اليابان",
-    images: ["assets/products/product-04-pure-beauty-collagen.jpg"],
-    description: "مسحوق كولاجين بحري بجودة يابانية لتغذية البشرة، يحتوي على خلاصة حبوب الكوإكس وحمض الهيالورونيك و CoQ10. صُنع في اليابان.",
-    ingredients: ["كولاجين بحري (100,000 ملغ)", "خلاصة حبوب الكوإكس", "حمض الهيالورونيك", "CoQ10"],
-    specifications: [
-      { label: "الوزن الصافي", value: "100 غرام" },
-      { label: "بلد الصنع", value: "اليابان" },
-    ],
-    available: true,
-  },
-  {
-    id: "p5",
-    sku: "ASN-CN-8971",
-    name: "Sumifun لاصقة تخفيف آلام الركبة",
-    category: "care",
-    categoryLabel: "عناية وجمال",
-    price: 900,
-    originCountry: "غير محدد",
-    images: ["assets/products/product-05-meniscus-patch.jpg"],
-    description: "لاصقات لتخفيف آلام الركبة والمفاصل، مناسبة لحالات التواء الركبة وآلام الغضروف الهلالي.",
-    ingredients: [],
-    specifications: [{ label: "عدد القطع", value: "4 قطع" }],
-    available: true,
-  },
-  {
-    id: "p6",
-    sku: "ASN-CN-8972",
-    name: "Sumifun مرهم تخفيف آلام الركبة",
-    category: "care",
-    categoryLabel: "عناية وجمال",
-    price: 1100,
-    originCountry: "غير محدد",
-    images: ["assets/products/product-06-meniscus-ointment.jpg"],
-    description: "مرهم لتخفيف آلام الركبة والعظام والمفاصل، ومناسب لإراحة إزعاج الغضروف الهلالي.",
-    ingredients: [],
-    specifications: [{ label: "الوزن", value: "40 غرام" }],
-    available: true,
-  },
-  {
-    id: "p7",
-    sku: "ASN-XX-8967",
-    name: "مسحوق ماتشا عضوي",
-    category: "food",
-    categoryLabel: "أطعمة ومشروبات",
-    price: 2200,
-    originCountry: "غير محدد",
-    images: ["assets/products/product-07-matcha-powder.jpg"],
-    description: "مسحوق شاي أخضر ماتشا عضوي 100%، خالٍ من الغلوتين ومنتجات الألبان، ومناسب للنظام النباتي الصرف.",
-    ingredients: ["مسحوق شاي أخضر (ماتشا) عضوي"],
-    specifications: [{ label: "الوزن الصافي", value: "100 غرام" }],
-    available: true,
-  },
-  {
-    id: "p8",
-    sku: "ASN-XX-8969",
-    name: "Googeer شاي ديتوكس بنكهة الخوخ",
-    category: "food",
-    categoryLabel: "أطعمة ومشروبات",
-    price: 1600,
-    originCountry: "غير محدد",
-    images: ["assets/products/product-08-detox-tea.jpg"],
-    description: "شاي منشط لتنظيف الجسم بنكهة الخوخ الطبيعية، يأتي في عبوة تحتوي على 28 كيس شاي.",
-    ingredients: [],
-    specifications: [{ label: "عدد الأكياس", value: "28 كيس شاي" }],
-    available: true,
-  },
-];
-
 /* ---------- Small utilities ---------- */
 
 // Escapes a string before it is ever inserted via innerHTML, to prevent XSS
-// from product data that came from the admin form (localStorage).
+// from product data that came from the admin form (now stored in Firestore).
 function escapeHTML(value) {
   const div = document.createElement("div");
   div.textContent = String(value ?? "");
@@ -170,18 +60,50 @@ function formatPrice(value) {
   return `${number.toLocaleString("en-US")} د.ج`;
 }
 
-/* ---------- Product storage ---------- */
-function getProducts() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY_PRODUCTS);
-    if (!raw) {
-      localStorage.setItem(STORAGE_KEY_PRODUCTS, JSON.stringify(SEED_PRODUCTS));
-      return SEED_PRODUCTS;
+// Guarantees every product object has the fields the renderer expects,
+// even if a Firestore document is missing a field (e.g. saved by an
+// older version of the admin panel before that field existed).
+function normalizeProduct(id, raw) {
+  const categoryLabels = {
+    food: "أطعمة ومشروبات",
+    care: "عناية وجمال",
+    accessories: "إكسسوارات",
+  };
+  const category = ["food", "care", "accessories"].includes(raw?.category) ? raw.category : "food";
+  return {
+    id,
+    sku: typeof raw?.sku === "string" ? raw.sku : "—",
+    name: typeof raw?.name === "string" && raw.name ? raw.name : "منتج بدون اسم",
+    category,
+    categoryLabel: typeof raw?.categoryLabel === "string" && raw.categoryLabel ? raw.categoryLabel : categoryLabels[category],
+    price: Number.isFinite(Number(raw?.price)) ? Number(raw.price) : 0,
+    originCountry: typeof raw?.originCountry === "string" ? raw.originCountry : "",
+    images: Array.isArray(raw?.images) && raw.images.length > 0 ? raw.images : ["assets/products/logo.png"],
+    description: typeof raw?.description === "string" ? raw.description : "",
+    ingredients: Array.isArray(raw?.ingredients) ? raw.ingredients : [],
+    specifications: Array.isArray(raw?.specifications) ? raw.specifications : [],
+    available: raw?.available !== false,
+  };
+}
+
+/* ---------- Product data: live from Cloud Firestore ---------- */
+// Subscribes once, on page load, and keeps `products` in sync for as
+// long as the tab is open — no manual refresh or cross-tab storage
+// event needed, and it also picks up changes made on other devices.
+function subscribeToProducts() {
+  const productsQuery = query(collection(db, PRODUCTS_COLLECTION), orderBy("createdAt", "asc"));
+
+  onSnapshot(
+    productsQuery,
+    (snapshot) => {
+      products = snapshot.docs.map((docSnap) => normalizeProduct(docSnap.id, docSnap.data()));
+      renderProductGrid();
+    },
+    (error) => {
+      console.error("Firestore products subscription failed:", error);
+      showToast("تعذّر تحميل المنتجات. تحقّق من اتصال الإنترنت أو إعدادات Firebase.");
     }
-    return JSON.parse(raw);
-  } catch {
-    return SEED_PRODUCTS;
-  }
+  );
 }
 
 /* ---------- Cart storage ---------- */
@@ -768,13 +690,10 @@ function wireEvents() {
     else if (dom.cartDrawer.classList.contains("is-open")) closeCartDrawer();
   });
 
-  // Keep the storefront in sync if products are edited in the admin panel
-  // (in another browser tab on the same origin).
+  // Cart badge stays in sync if the cart is changed in another tab.
+  // Product changes no longer need this — Firestore's onSnapshot
+  // already pushes updates live, including from other devices.
   window.addEventListener("storage", (e) => {
-    if (e.key === STORAGE_KEY_PRODUCTS) {
-      products = getProducts();
-      renderProductGrid();
-    }
     if (e.key === STORAGE_KEY_CART) {
       updateCartBadge();
     }
@@ -786,9 +705,9 @@ document.addEventListener("DOMContentLoaded", () => {
   cacheDom();
   document.getElementById("footer-year").textContent = new Date().getFullYear();
 
-  products = getProducts();
   renderCategoryFilters();
-  renderProductGrid();
+  renderProductGrid(); // renders the empty state immediately; Firestore fills it in
+  subscribeToProducts();
   updateCartBadge();
   wireEvents();
 });

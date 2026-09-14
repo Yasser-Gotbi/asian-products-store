@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>تسجيل الدخول | لوحة تحكم AsianProducts</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;500;600;700&family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="admin-style.css" />
+  <script src="auth.js"></script>
+  <script>
+    // Already logged in? Skip straight to the dashboard.
+    if (isAuthenticated()) {
+      window.location.href = "admin.html";
+    }
+  </script>
+</head>
+<body class="admin">
+
+  <div class="login-page">
+    <div class="login-card">
+      <img src="assets/products/logo.png" alt="شعار AsianProducts" class="login-card__logo" />
+      <h1>AsianProducts</h1>
+      <p class="login-card__subtitle">تسجيل الدخول إلى لوحة تحكم إدارة المنتجات</p>
+
+      <form id="login-form" novalidate>
+        <div class="admin-form__field">
+          <label for="login-username">اسم المستخدم</label>
+          <input type="text" id="login-username" autocomplete="username" required />
+        </div>
+        <div class="admin-form__field">
+          <label for="login-password">كلمة المرور</label>
+          <input type="password" id="login-password" autocomplete="current-password" required />
+        </div>
+
+        <p class="login-card__error" id="login-error" hidden>
+          اسم المستخدم أو كلمة المرور غير صحيحة.
+        </p>
+
+        <button type="submit" class="btn btn-primary btn-block">تسجيل الدخول</button>
+      </form>
+
+      <a href="index.html" class="login-card__back">← العودة إلى المتجر</a>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById("login-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      const username = document.getElementById("login-username").value.trim();
+      const password = document.getElementById("login-password").value;
+      const errorEl = document.getElementById("login-error");
+
+      if (login(username, password)) {
+        window.location.href = "admin.html";
+      } else {
+        errorEl.hidden = false;
+      }
+    });
+  </script>
+</body>
+</html>
